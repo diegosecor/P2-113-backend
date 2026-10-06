@@ -1,0 +1,13 @@
+{
+  "name": "path-frequency-api",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Profile, route-library, geographic context, and photo API for Path Frequency.",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
