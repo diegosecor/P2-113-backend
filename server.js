@@ -1,14 +1,26 @@
-// Minimal dependency-free API for Path Frequency. Start with: node backend/server.js
+/* =============================================================================
+   PATH FREQUENCY API
+   -----------------------------------------------------------------------------
+   Minimal dependency-free API. Start locally with: `node server.js`.
+   ============================================================================= */
 const http = require("node:http");
 const fs = require("node:fs");
 const path = require("node:path");
 const storeFile = path.join(__dirname, "routes-store.json");
 const port = Number(process.env.PORT || 3000);
+
+/* =============================================================================
+   FILE-BASED ROUTE STORE
+   -----------------------------------------------------------------------------
+   The local JSON file is created only after a profile or route is saved.
+   ============================================================================= */
 const readStore = () => {
   try { return JSON.parse(fs.readFileSync(storeFile, "utf8")); }
   catch (_) { return { profiles: [], routes: [] }; }
 };
 const writeStore = (store) => fs.writeFileSync(storeFile, JSON.stringify(store, null, 2));
+
+// Every API response includes CORS so the static GitHub Pages frontend can call it.
 const json = (res, status, body) => {
   res.writeHead(status, { "Content-Type": "application/json; charset=utf-8", "Access-Control-Allow-Origin": process.env.CORS_ORIGIN || "*" });
   res.end(JSON.stringify(body));
@@ -19,6 +31,12 @@ const body = (req) => new Promise((resolve, reject) => {
   req.on("end", () => { try { resolve(JSON.parse(raw || "{}")); } catch (e) { reject(e); } });
   req.on("error", reject);
 });
+
+/* =============================================================================
+   ROUTE INSIGHT SERVICES
+   -----------------------------------------------------------------------------
+   Reverse geocoding identifies a nearby place; an AI description is optional.
+   ============================================================================= */
 const terrain = (route) => {
   const span = Math.round(route.maxElevation - route.minElevation);
   if (span > 700 || route.ascent > 900) return "mountainous terrain with sustained climbs";
@@ -70,6 +88,11 @@ async function nearbyPhoto(lat, lon) {
   } catch (_) { return null; }
 }
 
+/* =============================================================================
+   HTTP ROUTES
+   -----------------------------------------------------------------------------
+   Profiles and saved routes use JSON; insight and photo routes add geographic context.
+   ============================================================================= */
 http.createServer(async (req, res) => {
   const url = new URL(req.url, `http://${req.headers.host}`);
   try {
